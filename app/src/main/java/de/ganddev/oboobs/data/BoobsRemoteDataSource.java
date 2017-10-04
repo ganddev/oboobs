@@ -13,6 +13,8 @@ import retrofit2.http.Path;
 
 public interface BoobsRemoteDataSource {
 
+    String ENDPOINT = "http://api.oboobs.ru";
+
     @GET("/boobs/get/{id}")
     Call<Boobs> getBoobById(@Path("id") int id);
 

@@ -2,14 +2,13 @@ package de.ganddev.oboobs;
 
 import android.content.Context;
 import android.databinding.DataBindingUtil;
-import android.support.annotation.NonNull;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
+import android.widget.ArrayAdapter;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.ArrayList;
 
 import de.ganddev.oboobs.data.Boobs;
 import de.ganddev.oboobs.databinding.BoobsCardBinding;
@@ -18,35 +17,22 @@ import de.ganddev.oboobs.databinding.BoobsCardBinding;
  * Created by bjornahlfeld on 29.09.17.
  */
 
-public class BoobsAdapter extends BaseAdapter {
+public class BoobsAdapter extends ArrayAdapter<Boobs> {
 
-    private List<Boobs> items;
+    private static final String TAG = BoobsAdapter.class.getSimpleName();
 
-    public BoobsAdapter() {
-        items = Collections.emptyList();
-    }
-
-    public BoobsAdapter(List<Boobs> items) {
-        this.items = items;
-    }
-
-    @Override
-    public int getCount() {
-        return items.size();
-    }
-
-    @Override
-    public Boobs getItem(int i) {
-        return items.get(i);
+    public BoobsAdapter(Context context) {
+        super(context, R.layout.boobs_card, new ArrayList<Boobs>());
     }
 
     @Override
     public long getItemId(int i) {
-        return items.get(i).getId();
+        return getItem(i).getId();
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
+        Log.d(TAG, "position: " + position);
         BoobsCardBinding binding;
         if (convertView == null) {
             LayoutInflater inflater = (LayoutInflater) parent.getContext()
@@ -56,22 +42,18 @@ public class BoobsAdapter extends BaseAdapter {
             binding = DataBindingUtil.getBinding(convertView);
         }
 
-        setBoobs(binding, items.get(position));
+        setBoobs(binding, getItem(position));
 
         return binding.getRoot();
     }
 
-    public void setItems(@NonNull List<Boobs> items) {
-        this.items = items;
-    }
-
     private void setBoobs(BoobsCardBinding binding, Boobs item) {
         BoobsItemViewModel viewModel = binding.getViewModel();
-        if(viewModel == null) {
+        if (viewModel == null) {
             viewModel = new BoobsItemViewModel(item);
-            binding.setViewModel(viewModel);
         } else {
             viewModel.setBoobs(item);
         }
+        binding.setViewModel(viewModel);
     }
 }
