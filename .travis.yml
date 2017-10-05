@@ -1,0 +1,83 @@
+language: android
+sudo: required
+before_cache:
+ - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
+ - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+cache:
+ directories:
+  - $HOME/.gradle/caches/
+  - $HOME/.gradle/wrapper/
+  - $HOME/.android/build-cache
+
+env:
+ global:
+  - ADB_INSTALL_TIMEOUT=20
+  - secure: "Ifj0QVuVk8oslpITEgNqce4FTvOvjK+idhKcOQHVN9MJjhnfTh5EQkuKI+Q6WMx1rbKi26MyN6nAOGs37Yp9FoBGmp/B/sv8tGAX+8AlH9IYLrS7Jp0Z50BoTac0lALTtD6+uQx13vyetli+RQxEn/HfGxmE3uox+cPGmUW0hFzTovSUD3BHnrPCsuRfnX5Mm+bVOOz8nMAR+EalFsDPHQgfb0Hf28V5nqxBjOgLm+wTuO3AQlpbPSh66XL0N9hCvW9FLzcr3KyUWsuASjXhFeFizE3BLJU+7+mc7/bBbEKXD/zDNthQ4TDPfD5om7rgaoJPDhb00yWK4mjNCvpDjhW3Pqn3b02mIWcnY4xxUbgv2QdFoYJIwwo5OB8dSWTqPrzsJTR7G4UCvf7PR0TmSfskrxbTcbhOOZWRGKbNHtVvQhcyAe+hLI97Pu/+vTsm0xrte9QSzXjYFkwgb4S+X9J0YlAqHknpyRA+C4Z7FlBsvvPicrJkvFP30ZCPc3kr9HBkSyLbu00lTsIzDGBmRBxW8bMWRXoPNL5GWXu1Vej7c1TrZYQH3dJc369aiHscFiBRMGwZl6D7acKye/ONOicYOeA6YQB1J+dmg4BGy45i0aiQT2M4dS7YtEjJkpCpqdLPaLWnpOKr/2xU9ZEc6/o6Hy80/6QMQ0VAXqcZ34M="
+  - secure: "gLovhOChKllx1geCaRbsvh/smQrg02Rxs4Yvi7febQz4fqnihic2/OvUxKV7dHIog+afepmtlZ5xBMa+cscXjqwF3LWWmkZubP1/iWh3w38rAjmvxbzHwgTLCVMYwOK3qC7EXkIUBr/F/k+SYDqqxohaIkElM8DpBOPYbz9znz9S3Zw1/PcJGcjgYSxIYfaz2mXbyewpfQkAj6xZbt0RAUwZZYHGA747HAYLqTXAu9DaQk0bCbO89Zn0sZX+gEuVhG4N4YjzZYmDgz6yKzC5KtkqM96nmMfHwlLlCOskx6UYuMClGJ+8/M905OIJeFv/rvw2MAREoCoiZiTqvueb3mCs1FtPhgFk+3CkVdHDJo1NK4FZJxjC6MCDAFq5Y4Cn00LN1wC9Zj0aH16hMKsismKSl5IAvnduZSckOtG2ePoSfve/eVfeBIh8lWLhG7PtRoDbkbRO9eFXAIWxK4azIW4NhkrPGEhxeiQGW17Uxlm6t38umdmDdl4jayVlUbm5/5TKBE6wIAkGPJzixOBaMv6m7hYmj4C1Pu+/hu5md2R1oxyLK7MPKKGLCX7IDq/kYxWW2bFjczFM+vRzTjzJtAmobfXwbAiPLXHXuyyd9CuVCRvtNMmbNMpVF6d+DQO2xZy0sJweIegaEJtZNxV3VMnJSHqTJKFX/70M9xAI3PU="
+android:
+  components:
+  - tools
+  - platform-tools
+  - tools
+   # The BuildTools version used by your project
+  - build-tools-26.0.1
+
+   # The SDK version used to compile your project
+  - android-26
+  - android-22
+  - addon-google_apis-google-22
+  # Additional components
+  - extra-google-m2repository
+  - extra-android-m2repository
+  - extra-android-support
+  - addon-google_apis-google-19 # google play services
+  - sys-img-armeabi-v7a-google_apis-22
+  - sys-img-armeabi-v7a-android-22
+  licenses:
+  - android-sdk-preview-license-.+
+  - android-sdk-license-.+
+  - google-gdk-license-.+
+
+before_install:
+- pip install --user codecov    #Install codecov
+- openssl aes-256-cbc -K $encrypted_1b424ef68aad_key -iv $encrypted_1b424ef68aad_iv -in oboobs_keystore.jks.enc -out oboobs_keystore.jks -d
+- mkdir "$ANDROID_HOME/licenses" || true
+- echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55" > "$ANDROID_HOME/licenses/android-sdk-license"
+- echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > "$ANDROID_HOME/licenses/android-sdk-preview-license"
+- chmod +x gradlew
+- ./gradlew dependencies || true
+
+before_script:
+- echo no | android create avd --force -n test -t android-22 --abi armeabi-v7a
+- emulator -avd test -no-skin -no-audio -no-window &
+- android-wait-for-emulator
+- adb shell input keyevent 82 &
+
+script:
+- "./gradlew clean build connectedAndroidTest --stacktrace"
+- "./gradlew test"
+
+before_deploy:
+- cp $TRAVIS_BUILD_DIR/oboobs_keystore.jks $HOME
+- cd app/build/outputs/apk/
+- jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore $HOME/oboobs_keystore.jks -storepass $storepass -keypass $keypass app-release-unsigned.apk oboobs
+
+# Verification
+- jarsigner -verify app-release-unsigned.apk
+- "${ANDROID_HOME}/build-tools/26.0.1/zipalign -v 4 app-release-unsigned.apk oboobs.apk"
+
+after_success:
+- codecov                       #Run codecov
+
+deploy:
+  provider: releases
+  file: oboobs.apk
+  skip_cleanup: true 
+
+  on:
+    branch: master
+    repo: ganddev/oboobs
+    tags: true
+    jdk: oraclejdk8
+  api_key:
+    secure: "Ocq30LRZc/K7gaJFwxIB13NEmhZvqRAM7j6Xge/uI3NTZS1HxjZpW0mxi++utD0o38zTzNSvi5+S2iEt6IbztKqCC1OXFZeGngN6+1odxPAM21S/CsKUyP+F6dSTG1Pz+gsMV04RDjrm3nZvFFFWmca1mZhsAZcmRUVsiAT7lyQ+QGQsL7vnuJNdCBm4LeAhf9+zWuDovFCivrTaXfEbhOgQykeweKYbcHyjVvtuG3NqaWLnL9XXq8tnHR4/Mqv9cJ4G62B5fehvSeza0YsIGyAP+6lyaVGqwpU22OT/zvNnrSI8CeAAZqTi+uBNz+pmO3afYyrKxddBr7cifFbqNhl4lLsnBkfc112wgziaPOqTz4kC2whOB8qS+MF06RgBkTAxT3dPVSiV4OWWKj1hbCzC1c8Fhen2Xz09PCqMlsAznjYHunZ0n40Ch7QGnQl/HHVExv77XDxflXIYVRGpjCbKiXALx9UMl92PopM4ofl+ZDUqDt1VNLFYPMgo0XBFzf4Haiwpxp8Qp5tHUVFYt53fbMvtXTU1DXUkvzVtfoZFrfEfquge2vpl4bd8tKkJVUKan0pwG8COKsgheZfj0Ii4uBDyrDzrnYaLi9XSYrXrr2BANp8IPDg39WqwefwIZCgrZv4kuTwxu1NTczQuw+O9eLI7g91BmCgIN4QKZKw="
