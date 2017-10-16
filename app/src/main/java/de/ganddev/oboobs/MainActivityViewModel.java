@@ -62,7 +62,7 @@ public class MainActivityViewModel extends ViewModel implements Callback<List<Bo
     }
 
     public void swipedToRight(int position) {
-        rateBoobsNegative(position);
+        rateBoobsPositive(position % NUMBER_OF_BOOBS);
     }
 
     private void rateBoobsNegative(int position) {
@@ -80,7 +80,7 @@ public class MainActivityViewModel extends ViewModel implements Callback<List<Bo
     }
 
     public void swipedToLeft(int position) {
-        rateBoobsPositive(position);
+        rateBoobsNegative(position % NUMBER_OF_BOOBS);
     }
 
     private void rateBoobsPositive(int position) {

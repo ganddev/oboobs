@@ -35,12 +35,12 @@ public class MainActivity extends LifecycleActivity {
         swipeStack.setListener(new SwipeStack.SwipeStackListener() {
             @Override
             public void onViewSwipedToLeft(int position) {
-                viewModel.swipedToLeft(position % 3);
+                viewModel.swipedToLeft(position);
             }
 
             @Override
             public void onViewSwipedToRight(int position) {
-               viewModel.swipedToRight(position % 3);
+               viewModel.swipedToRight(position);
             }
 
             @Override
