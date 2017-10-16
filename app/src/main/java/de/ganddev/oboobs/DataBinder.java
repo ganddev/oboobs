@@ -12,11 +12,9 @@ import com.bumptech.glide.Glide;
 
 public class DataBinder {
 
-
     @BindingAdapter("imageUrl")
     public static void setImageUrl(ImageView imageView, String url) {
         Context context = imageView.getContext();
         Glide.with(context).load(url).into(imageView);
     }
-
 }

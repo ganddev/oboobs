@@ -1,25 +1,37 @@
 package de.ganddev.oboobs;
 
+import android.arch.lifecycle.LifecycleActivity;
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProvider;
 import android.arch.lifecycle.ViewModelProviders;
 import android.databinding.DataBindingUtil;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.annotation.Nullable;
 
+import java.util.List;
+
+import javax.inject.Inject;
+
+import dagger.android.AndroidInjection;
+import de.ganddev.oboobs.data.Boobs;
 import link.fls.swipestack.SwipeStack;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends LifecycleActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private MainActivityViewModel viewModel;
     private BoobsAdapter adapter;
 
+    @Inject
+    ViewModelProvider.Factory viewModelFactory;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        AndroidInjection.inject(this);
         super.onCreate(savedInstanceState);
         DataBindingUtil.setContentView(this, R.layout.activity_main);
 
-        SwipeStack swipeStack =  findViewById(R.id.swipeStack);
+        SwipeStack swipeStack = findViewById(R.id.swipeStack);
         swipeStack.setListener(new SwipeStack.SwipeStackListener() {
             @Override
             public void onViewSwipedToLeft(int position) {
@@ -28,25 +40,26 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onViewSwipedToRight(int position) {
-                Log.d(TAG, "onViewSwipedToRight");
-                viewModel.swipedToRight(position);
+               viewModel.swipedToRight(position);
             }
 
             @Override
             public void onStackEmpty() {
-                Log.d(TAG, "onStackEmpty");
                 viewModel.loadNext();
             }
         });
-        adapter = new BoobsAdapter();
+        adapter = new BoobsAdapter(this);
         swipeStack.setAdapter(adapter);
 
 
-        viewModel = ViewModelProviders.of(this).get(MainActivityViewModel.class);
-        viewModel.setBoobsRemoteDataSource(APIUtils.getBoobsService());
-        viewModel.getBoobs().observe(this, boobs -> {
-            adapter.setItems(boobs);
-            adapter.notifyDataSetChanged();
-        });
+        viewModel = ViewModelProviders.of(this, viewModelFactory).get(MainActivityViewModel.class);
+        viewModel.getBoobs().observe(this, new Observer<List<Boobs>>() {
+                    @Override
+                    public void onChanged(@Nullable List<Boobs> boobs) {
+                        adapter.addAll(boobs);
+                    }
+                }
+        );
+
     }
 }

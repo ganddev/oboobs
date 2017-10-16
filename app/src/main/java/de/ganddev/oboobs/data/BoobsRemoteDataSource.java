@@ -13,11 +13,13 @@ import retrofit2.http.Path;
 
 public interface BoobsRemoteDataSource {
 
+    String ENDPOINT = "http://api.oboobs.ru";
+
     @GET("/boobs/get/{id}")
     Call<Boobs> getBoobById(@Path("id") int id);
 
-    @GET("/noise/{number_od_elements}")
-    Call<List<Boobs>> getRandomBoobs(@Path("number_od_elements") int count);
+    @GET("/noise/{number_of_elements}")
+    Call<List<Boobs>> getRandomBoobs(@Path("number_of_elements") int count);
 
     @GET("/boobs/model/{name}")
     Call<List<Boobs>> getBoobsByModel(@Path("name") String name);

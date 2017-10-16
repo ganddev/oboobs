@@ -7,6 +7,8 @@ import android.support.annotation.NonNull;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 import de.ganddev.oboobs.data.Boobs;
 import de.ganddev.oboobs.data.BoobsRemoteDataSource;
 import retrofit2.Call;
@@ -19,22 +21,23 @@ import retrofit2.Response;
 
 public class MainActivityViewModel extends ViewModel implements Callback<List<Boobs>> {
 
-    private static final int NUMBER_OF_BOOBS = 50;
-
-    public void setBoobsRemoteDataSource(@NonNull BoobsRemoteDataSource boobsRemoteDataSource) {
-        this.boobsRemoteDataSource = boobsRemoteDataSource;
-    }
+    private static final int NUMBER_OF_BOOBS = 3;
 
     @NonNull
     private BoobsRemoteDataSource boobsRemoteDataSource;
 
-    private MutableLiveData<List<Boobs>> boobs;
+    @NonNull
+    private final MutableLiveData<List<Boobs>> boobs;
 
+    @Inject
+    public MainActivityViewModel(@NonNull BoobsRemoteDataSource boobsRemoteDataSource) {
+       this.boobsRemoteDataSource = boobsRemoteDataSource;
+        boobs = new MutableLiveData<>();
+        loadRandomBoobs();
+    }
+
+    @NonNull
     public LiveData<List<Boobs>> getBoobs() {
-        if (boobs == null) {
-            boobs = new MutableLiveData<>();
-            loadRandomBoobs();
-        }
         return boobs;
     }
 
@@ -59,10 +62,38 @@ public class MainActivityViewModel extends ViewModel implements Callback<List<Bo
     }
 
     public void swipedToRight(int position) {
-        boobsRemoteDataSource.rateNoiseNegativ(boobs.getValue().get(position).getId());
+        rateBoobsPositive(position % NUMBER_OF_BOOBS);
+    }
+
+    private void rateBoobsNegative(int position) {
+        boobsRemoteDataSource.rateNoiseNegativ(boobs.getValue().get(position).getId()).enqueue(new Callback<Boobs>() {
+            @Override
+            public void onResponse(Call<Boobs> call, Response<Boobs> response) {
+
+            }
+
+            @Override
+            public void onFailure(Call<Boobs> call, Throwable t) {
+
+            }
+        });
     }
 
     public void swipedToLeft(int position) {
-        boobsRemoteDataSource.rateNoisePositiv(boobs.getValue().get(position).getId());
+        rateBoobsNegative(position % NUMBER_OF_BOOBS);
+    }
+
+    private void rateBoobsPositive(int position) {
+        boobsRemoteDataSource.rateNoisePositiv(boobs.getValue().get(position).getId()).enqueue(new Callback<Boobs>() {
+            @Override
+            public void onResponse(Call<Boobs> call, Response<Boobs> response) {
+
+            }
+
+            @Override
+            public void onFailure(Call<Boobs> call, Throwable t) {
+
+            }
+        });
     }
 }
